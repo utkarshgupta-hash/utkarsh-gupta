@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Auto Loan Planner V13</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-logo">AI8Digital AutoLoan V13</div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container layout-initial" id="mainContainer">
+        <!-- Financial Profile Panel -->
+        <aside class="input-panel glass-card" id="inputPanel">
+            <!-- Main Headings -->
+            <div class="main-headings" id="mainHeadings">
+                <h1 class="main-title">Smart Auto Loan Planner V13</h1>
+                <h3 class="main-subtitle">AI-powered financial intelligence with enhanced validation</h3>
+            </div>
+            
+            <!-- Sidebar Heading -->
+            <div class="sidebar-heading hidden" id="sidebarHeading">
+                <h2 class="sidebar-title">Your Financial Profile</h2>
+            </div>
+            
+            <!-- 3x3 Grid Financial Profile (Reordered: Lifestyle before Expenses) -->
+            <div class="financial-grid" id="financialGrid">
+                <!-- Row 1 -->
+                <div class="form-group">
+                    <label class="form-label" for="monthlyIncome">Monthly Income (₹)</label>
+                    <input type="number" id="monthlyIncome" class="form-input" placeholder="e.g., 80000" min="10000" max="1000000">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="lifestyleCategory">Lifestyle Category</label>
+                    <select id="lifestyleCategory" class="form-input">
+                        <option value="">Select your lifestyle</option>
+                        <option value="basic">Basic (55% expenses)</option>
+                        <option value="balanced">Balanced (65% expenses)</option>
+                        <option value="premium">Premium (75% expenses)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="monthlyExpenses">Monthly Expenses (₹)</label>
+                    <input type="number" id="monthlyExpenses" class="form-input" placeholder="Auto-calculated" readonly>
+                </div>
+                
+                <!-- Row 2 -->
+                <div class="form-group">
+                    <label class="form-label" for="totalSavings">Total Savings (₹)</label>
+                    <input type="number" id="totalSavings" class="form-input" placeholder="e.g., 300000" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="loanTenure">Loan Tenure</label>
+                    <select id="loanTenure" class="form-input">
+                        <option value="3">3 Years</option>
+                        <option value="5" selected>5 Years (Recommended)</option>
+                        <option value="7">7 Years</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="carName">Desired Car</label>
+                    <input type="text" id="carName" class="form-input" placeholder="e.g., Tata Nexon EV 2023" autocomplete="off">
+                    <div class="suggestions-dropdown hidden" id="suggestionsDropdown"></div>
+                    <!-- Real-time car match status -->
+                    <div class="car-match-status hidden" id="carMatchStatus">
+                        <span id="matchIcon"></span>
+                        <span id="matchText"></span>
+                    </div>
+                </div>
+                
+                <!-- Row 3 - Calculate Button -->
+                <button class="btn btn-primary calculate-btn" id="calculateBtn">
+                    <span class="btn-icon">🧠</span>
+                    Calculate with AI
+                </button>
+            </div>
+        </aside>
+
+        <!-- Blocking Message Container -->
+        <div class="blocking-message-container hidden" id="blockingMessageContainer">
+            <div class="blocking-message glass-card">
+                <div class="blocking-icon">🚫</div>
+                <h3 class="blocking-title" id="blockingTitle">Financial Safety Alert</h3>
+                <div class="blocking-content" id="blockingContent"></div>
+                <div class="blocking-alternatives" id="blockingAlternatives"></div>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div class="results-container hidden" id="resultsContainer">
+            <!-- Car Image Section -->
+            <section class="car-image-section glass-card" id="carImageSection">
+                <div class="car-image-container">
+                    <img id="carImage" src="" alt="Selected Car" class="car-image hidden">
+                    <div class="car-image-placeholder hidden" id="carImagePlaceholder">
+                        <div class="placeholder-icon">🚗</div>
+                        <div class="placeholder-text">Car Image Loading...</div>
+                    </div>
+                </div>
+                <div class="car-details-overlay">
+                    <h3 id="selectedCarName" class="car-name"></h3>
+                    <p id="selectedCarCategory" class="car-category"></p>
+                    <p id="selectedCarPrice" class="car-price"></p>
+                </div>
+            </section>
+
+            <!-- Analysis Cards -->
+            <section class="analysis-row hidden" id="analysisRow">
+                <div class="analysis-card glass-card">
+                    <div class="analysis-header">Monthly EMI</div>
+                    <div class="analysis-value" id="analysisEMI">₹0</div>
+                    <div class="analysis-details" id="analysisEMIDetails">Based on loan amount and tenure</div>
+                </div>
+                <div class="analysis-card glass-card">
+                    <div class="analysis-header">Affordability Status</div>
+                    <div class="analysis-value affordability-text" id="analysisAffordability">Checking...</div>
+                    <div class="analysis-details" id="analysisAffordabilityDetails">
+                        <div class="affordability-indicator" id="affordabilityIndicator">
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" id="indicatorFill"></div>
+                            </div>
+                            <div class="indicator-text" id="indicatorText">Analyzing...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="analysis-card glass-card">
+                    <div class="analysis-header">Savings Usage</div>
+                    <div class="analysis-value" id="analysisSavings">0%</div>
+                    <div class="analysis-details" id="analysisSavingsDetails">Percentage of savings used</div>
+                </div>
+            </section>
+
+            <!-- AI Expense Estimation -->
+            <section class="glass-card expense-estimation hidden" id="expenseEstimation">
+                <div class="card-header">
+                    <h3>🤖 AI Expense Estimation</h3>
+                </div>
+                <div class="card-body">
+                    <div class="estimation-info">
+                        <div class="estimation-text" id="estimationText"></div>
+                        <button class="btn btn-outline btn-sm" id="editExpensesBtn">✏️ Edit</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enhanced Car Detection Results -->
+            <section class="glass-card detection-results hidden" id="detectionResults">
+                <div class="card-header">
+                    <h3>🎯 Car Match & Price Detection</h3>
+                </div>
+                <div class="card-body">
+                    <div class="detection-info">
+                        <div class="car-details">
+                            <div class="car-name" id="detectedCarName"></div>
+                            <div class="car-category" id="detectedCategory"></div>
+                            <div class="combined-status-badge" id="combinedStatusBadge"></div>
+                        </div>
+                        <div class="price-info">
+                            <div class="price-range" id="priceRange"></div>
+                            <div class="base-price" id="basePrice"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Affordability Analysis -->
+            <section class="glass-card affordability-section hidden" id="affordabilitySection">
+                <div class="card-header">
+                    <h3>📊 AI-Powered Affordability Analysis</h3>
+                </div>
+                <div class="card-body">
+                    <div class="financial-summary">
+                        <div class="summary-item glass-card-inner">
+                            <span class="label">Disposable Income</span>
+                            <span class="value" id="disposableIncome">₹0</span>
+                        </div>
+                        <div class="summary-item glass-card-inner">
+                            <span class="label">Max Safe EMI (35%)</span>
+                            <span class="value" id="maxEmi">₹0</span>
+                        </div>
+                        <div class="summary-item glass-card-inner">
+                            <span class="label">Available Down Payment</span>
+                            <span class="value" id="availableDownPayment">₹0</span>
+                        </div>
+                        <div class="summary-item glass-card-inner">
+                            <span class="label">Required Down Payment (20%)</span>
+                            <span class="value" id="requiredDownPayment">₹0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="traffic-light-container glass-card-inner">
+                        <h4 class="traffic-title">🚦 Financial Safety Indicator</h4>
+                        <div class="traffic-light">
+                            <div class="traffic-light-item" id="trafficGreen">
+                                <div class="light green" id="greenLight"></div>
+                                <span>Financially Safe</span>
+                            </div>
+                            <div class="traffic-light-item" id="trafficYellow">
+                                <div class="light yellow" id="yellowLight"></div>
+                                <span>Stretches Budget</span>
+                            </div>
+                            <div class="traffic-light-item" id="trafficRed">
+                                <div class="light red" id="redLight"></div>
+                                <span>Not Recommended</span>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-bars">
+                            <div class="progress-item">
+                                <div class="progress-label">
+                                    <span>EMI-to-Income Ratio</span>
+                                    <span id="affordabilityIndexValue">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="indexFill"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-item">
+                                <div class="progress-label">
+                                    <span>Savings Utilization</span>
+                                    <span id="savingsBurnRate">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="burnFill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Visualizations (Pie chart removed) -->
+            <section class="glass-card visualizations-section hidden" id="visualizationsSection">
+                <div class="card-header">
+                    <h3>📈 Financial Analysis</h3>
+                </div>
+                <div class="card-body">
+                    <div class="charts-grid">
+                        <div class="chart-container glass-card-inner">
+                            <h4>📊 Income Distribution</h4>
+                            <div class="income-breakdown">
+                                <div class="breakdown-item">
+                                    <div class="breakdown-label">Monthly Expenses</div>
+                                    <div class="breakdown-bar">
+                                        <div class="breakdown-fill expenses" id="expensesBar"></div>
+                                    </div>
+                                    <div class="breakdown-value" id="expensesValue">₹0</div>
+                                </div>
+                                <div class="breakdown-item">
+                                    <div class="breakdown-label">Car EMI</div>
+                                    <div class="breakdown-bar">
+                                        <div class="breakdown-fill emi" id="emiBar"></div>
+                                    </div>
+                                    <div class="breakdown-value" id="emiValue">₹0</div>
+                                </div>
+                                <div class="breakdown-item">
+                                    <div class="breakdown-label">Free Cash</div>
+                                    <div class="breakdown-bar">
+                                        <div class="breakdown-fill free" id="freeBar"></div>
+                                    </div>
+                                    <div class="breakdown-value" id="freeValue">₹0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container glass-card-inner">
+                            <h4>📉 Affordability Progress</h4>
+                            <div style="position: relative; height: 250px;">
+                                <canvas id="affordabilityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Repayment Schedule -->
+            <section class="glass-card repayment-section hidden" id="repaymentSection">
+                <div class="card-header">
+                    <h3>📅 Comprehensive Repayment Analysis</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tenure</th>
+                                    <th>Monthly EMI</th>
+                                    <th>Total Interest</th>
+                                    <th>Total Payment</th>
+                                    <th>Financial Safety</th>
+                                    <th>Savings Impact</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emiTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Smart Alternatives -->
+            <section class="glass-card alternatives-section hidden" id="alternativesSection">
+                <div class="card-header">
+                    <h3>🎯 Smart Alternative Recommendations</h3>
+                    <p>Cars that fit perfectly within your financial safety parameters</p>
+                </div>
+                <div class="card-body">
+                    <div class="alternatives-intro" id="alternativesIntro"></div>
+                    <div class="alternatives-grid" id="alternativesGrid"></div>
+                </div>
+            </section>
+
+            <!-- Enhanced Dynamic Q&A System -->
+            <section class="glass-card explainer-section hidden" id="explainerSection">
+                <div class="card-header">
+                    <h3>🤖 Dynamic Q&A System</h3>
+                    <p>Get context-aware insights based on your specific financial situation</p>
+                </div>
+                <div class="card-body">
+                    <div class="quick-questions">
+                        <button class="btn btn-outline question-btn" data-question="why-cant-afford">
+                            ❓ Why can't I afford this car?
+                        </button>
+                        <button class="btn btn-outline question-btn" data-question="how-much-save">
+                            💰 How much more should I save?
+                        </button>
+                        <button class="btn btn-outline question-btn" data-question="what-salary">
+                            💼 What salary do I need?
+                        </button>
+                        <button class="btn btn-outline question-btn" data-question="max-price">
+                            🎯 What's my maximum affordable car price?
+                        </button>
+                    </div>
+                    
+                    <!-- Dynamic Answer Sections -->
+                    <div class="qa-answers">
+                        <div class="qa-answer hidden" id="whyCantAffordAnswer">
+                            <h4>❓ Why can't I afford this car?</h4>
+                            <div class="answer-content"></div>
+                        </div>
+                        
+                        <div class="qa-answer hidden" id="howMuchSaveAnswer">
+                            <h4>💰 How much more should I save?</h4>
+                            <div class="answer-content"></div>
+                        </div>
+                        
+                        <div class="qa-answer hidden" id="whatSalaryAnswer">
+                            <h4>💼 What salary do I need?</h4>
+                            <div class="answer-content"></div>
+                        </div>
+                        
+                        <div class="qa-answer hidden" id="maxAffordablePriceAnswer">
+                            <h4>🎯 What's my maximum affordable car price?</h4>
+                            <div class="answer-content"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation-content glass-card-inner" id="explanationContent">
+                        <div class="default-message">
+                            <h4>💡 Enhanced Dynamic Q&A System</h4>
+                            <p>Click on any question above to get personalized insights based on your current financial data and car selection.</p>
+                            <p>The system will dynamically generate context-aware recommendations using your real-time inputs, including specific income, expenses, and EMI calculations.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal-overlay hidden" id="errorMessage">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h4>⚠️ Validation Error</h4>
+            </div>
+            <div class="modal-body">
+                <p id="errorText">Something went wrong. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="hideError()">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
